@@ -1,9 +1,18 @@
 ---
 title: "Lab 8: Searching for Efficiency"
-author: "Your name here!"
-format: html
+author: "Gabriela Tena!"
+format: 
+  html:  
+    embed-resources: true
+    code-tools: true
+    toc: true
+    code-fold: true
 editor: source
-embed-resources: true
+execute: 
+  echo: true
+warning: false
+message: false
+theme: "cyborg"
 ---
 
 ```{r}
