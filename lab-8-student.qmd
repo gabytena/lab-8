@@ -47,12 +47,16 @@ First up, we're going to revisit Question 3 from Lab 2. This question asked:
 
 > What are the data types of the variables in this dataset?
 
-**1. Using `map_chr()`, produce a nicely formatted table of the data type of each variable in the `surveys` dataset.** Specifically, the table should have 15 columns, one for
-each variable, with the datatype of that variable immediately below it's name. 
+**1. Using `map_chr()`, produce a nicely formatted table of the data type of each variable in the `surveys` dataset.** Specifically, the table should have 15 columns, one for each variable, with the datatype of that variable immediately below it's name. 
 
 ```{r}
 #| label: map-data-types-of-surveys
-
+surveys |>
+  map_chr(class) |>
+  as_tibble(rownames = "variable") |>
+  pivot_wider(names_from = variable,
+              values_from = value)
+  
 
 ```
 
@@ -71,7 +75,14 @@ list output back into a data frame.
 ```{r}
 #| label: map-to-mutate-columns
 
-
+evals |>
+  map_at(c("teacher_id",
+           "weekday",
+           "academic_degree",
+           "seniority",
+           "gender"), 
+         as.factor) |>
+  bind_cols()
 ```
 
 Next up, we're going revisit Question 7 which asked:
@@ -96,8 +107,42 @@ I'm using the `sen_level` classification from Challenge 3
 
 ```{r}
 #| label: double-pivot-for-summary-table
-
-
+evals |>
+  mutate(sen_level = if_else(seniority <= 4, 
+                             "junior", 
+                             "senior")) |>
+  select(teacher_id, 
+         sex, 
+         academic_degree, 
+         sen_level) |>
+  unique() |>
+  pivot_longer(cols = c(sex, 
+                        academic_degree, 
+                        sen_level), 
+               names_to = "demographic", 
+               values_to = "value") |>
+  mutate(value = fct_recode(value,
+                            "Female" = "female",
+                            "Male" = "male",
+                            "Junior (4 years or less)" = "junior",
+                            "Senior (more than 4 years)" = "senior",
+                            "No Degree" = "no_dgr",
+                            "Masters" = "ma",
+                            "Doctorate" = "dr",
+                            "Professor" = "prof"),
+         value = fct_relevel(value,
+                             "Female",
+                             "Male",
+                             "Junior (4 years or less)",
+                             "Senior (more than 4 years)",
+                             "No Degree",
+                             "Masters",
+                             "Doctorate",
+                             "Professor")) |>
+  count(value) |>
+  pivot_wider(names_from = value,
+              values_from = n, 
+              values_fill = 0)
 ```
 
 ::: {.callout-tip}
@@ -119,6 +164,16 @@ Question 1 asked you to use `across()` to make a table which summarized:
 
 ```{r}
 #| label: map-missing-values-of-fish
-
+fish |>
+  summarize(across(everything(),
+                   ~sum(is.na(.)))) |>
+  pivot_longer(cols = everything(), 
+               names_to = "variables", 
+               values_to = "number_missing") |>
+  filter(number_missing > 0) |>
+  mutate(number_missing = map_int(1, 
+                                  ~sum(apply(fish,
+                                             1, 
+                                             anyNA))))
 
 ```
